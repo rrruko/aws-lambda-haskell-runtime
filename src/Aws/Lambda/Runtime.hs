@@ -26,7 +26,7 @@ import Data.Aeson (encode)
 import Data.IORef (newIORef)
 import Data.Text (Text, unpack)
 import qualified Network.HTTP.Client as Http
-import System.IO (hFlush, stderr, stdout)
+import System.IO (hFlush, hPutStr, hPutStrLn, stderr, stdout)
 
 -- | Runs the user @haskell_lambda@ executable and posts back the
 -- results. This is called from the layer's @main@ function.
@@ -39,6 +39,9 @@ runLambda initializeCustomContext callback = do
   forever $ do
     lambdaApi <- Environment.apiEndpoint `catch` variableNotSet
     event <- ApiInfo.fetchEvent manager lambdaApi `catch` errorParsing
+
+    hPutStrLn stderr "*** Got event from AWS Lambda: "
+    hPutStr stderr (show event)
 
     -- Purposefully shadowing to prevent using the initial "empty" context
     context <- Context.setEventData context event
