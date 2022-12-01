@@ -46,9 +46,9 @@ newtype ApiGatewayDispatcherOptions = ApiGatewayDispatcherOptions
   }
 
 data ApiGatewayRequest body = ApiGatewayRequest
-  { apiGatewayRequestResource :: !Text,
-    apiGatewayRequestPath :: !Text,
-    apiGatewayRequestHttpMethod :: !Text,
+  { apiGatewayRequestResource :: !(Maybe Text),
+    apiGatewayRequestPath :: !(Maybe Text),
+    apiGatewayRequestHttpMethod :: !(Maybe Text),
     apiGatewayRequestHeaders :: !(Maybe (HashMap Text Text)),
     apiGatewayRequestQueryStringParameters :: !(Maybe (HashMap Text Text)),
     apiGatewayRequestPathParameters :: !(Maybe (HashMap Text Text)),
@@ -85,9 +85,9 @@ parseObjectFromStringField obj fieldName = do
 parseApiGatewayRequest :: (Object -> T.Key -> Parser (Maybe body)) -> Value -> Parser (ApiGatewayRequest body)
 parseApiGatewayRequest bodyParser (Object v) =
   ApiGatewayRequest
-    <$> v .: "resource"
-    <*> v .: "path"
-    <*> v .: "httpMethod"
+    <$> v .:? "resource"
+    <*> v .:? "path"
+    <*> v .:? "httpMethod"
     <*> v .: "headers"
     <*> v .: "queryStringParameters"
     <*> v .: "pathParameters"
@@ -98,14 +98,14 @@ parseApiGatewayRequest bodyParser (Object v) =
 parseApiGatewayRequest _ _ = fail "Expected ApiGatewayRequest to be an object."
 
 data ApiGatewayRequestContext = ApiGatewayRequestContext
-  { apiGatewayRequestContextResourceId :: !Text,
-    apiGatewayRequestContextResourcePath :: !Text,
-    apiGatewayRequestContextHttpMethod :: !Text,
-    apiGatewayRequestContextExtendedRequestId :: !Text,
-    apiGatewayRequestContextRequestTime :: !Text,
-    apiGatewayRequestContextPath :: !Text,
+  { apiGatewayRequestContextResourceId :: !(Maybe Text),
+    apiGatewayRequestContextResourcePath :: !(Maybe Text),
+    apiGatewayRequestContextHttpMethod :: !(Maybe Text),
+    apiGatewayRequestContextExtendedRequestId :: !(Maybe Text),
+    apiGatewayRequestContextRequestTime :: !(Maybe Text),
+    apiGatewayRequestContextPath :: !(Maybe Text),
     apiGatewayRequestContextAccountId :: !Text,
-    apiGatewayRequestContextProtocol :: !Text,
+    apiGatewayRequestContextProtocol :: !(Maybe Text),
     apiGatewayRequestContextStage :: !Text,
     apiGatewayRequestContextDomainPrefix :: !Text,
     apiGatewayRequestContextRequestId :: !Text,
@@ -119,14 +119,14 @@ data ApiGatewayRequestContext = ApiGatewayRequestContext
 instance FromJSON ApiGatewayRequestContext where
   parseJSON (Object v) =
     ApiGatewayRequestContext
-      <$> v .: "resourceId"
-      <*> v .: "path"
-      <*> v .: "httpMethod"
-      <*> v .: "extendedRequestId"
-      <*> v .: "requestTime"
-      <*> v .: "path"
+      <$> v .:? "resourceId"
+      <*> v .:? "path"
+      <*> v .:? "httpMethod"
+      <*> v .:? "extendedRequestId"
+      <*> v .:? "requestTime"
+      <*> v .:? "path"
       <*> v .: "accountId"
-      <*> v .: "protocol"
+      <*> v .:? "protocol"
       <*> v .: "stage"
       <*> v .: "domainPrefix"
       <*> v .: "requestId"
