@@ -1,6 +1,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -63,10 +64,10 @@ data ApiGatewayRequest body = ApiGatewayRequest
 -- We special case String and Text in order
 -- to avoid unneeded encoding which will wrap them in quotes and break parsing
 instance {-# OVERLAPPING #-} FromJSON (ApiGatewayRequest Text) where
-  parseJSON = parseApiGatewayRequest (.:)
+  parseJSON = parseApiGatewayRequest (.:?)
 
 instance {-# OVERLAPPING #-} FromJSON (ApiGatewayRequest String) where
-  parseJSON = parseApiGatewayRequest (.:)
+  parseJSON = parseApiGatewayRequest (.:?)
 
 instance FromJSON body => FromJSON (ApiGatewayRequest body) where
   parseJSON = parseApiGatewayRequest parseObjectFromStringField
@@ -74,14 +75,15 @@ instance FromJSON body => FromJSON (ApiGatewayRequest body) where
 -- We need this because API Gateway is going to send us the payload as a JSON string
 parseObjectFromStringField :: FromJSON a => Object -> T.Key -> Parser (Maybe a)
 parseObjectFromStringField obj fieldName = do
-  fieldContents <- obj .: fieldName
-  case fieldContents of
-    String stringContents ->
-      case eitherDecodeStrict (T.encodeUtf8 stringContents) of
-        Right success -> pure success
-        Left err -> fail err
-    Null -> pure Nothing
-    other -> T.typeMismatch "String or Null" other
+  obj .:? fieldName >>= \case
+    Nothing -> pure Nothing
+    Just fieldContents -> case fieldContents of
+      String stringContents ->
+        case eitherDecodeStrict (T.encodeUtf8 stringContents) of
+          Right success -> pure success
+          Left err -> fail err
+      Null -> pure Nothing
+      other -> T.typeMismatch "String or Null" other
 
 parseApiGatewayRequest :: (Object -> T.Key -> Parser (Maybe body)) -> Value -> Parser (ApiGatewayRequest body)
 parseApiGatewayRequest bodyParser (Object v) =
@@ -90,10 +92,10 @@ parseApiGatewayRequest bodyParser (Object v) =
     <*> v .:? "path"
     <*> v .:? "rawPath"
     <*> v .:? "httpMethod"
-    <*> v .: "headers"
-    <*> v .: "queryStringParameters"
-    <*> v .: "pathParameters"
-    <*> v .: "stageVariables"
+    <*> v .:? "headers"
+    <*> v .:? "queryStringParameters"
+    <*> v .:? "pathParameters"
+    <*> v .:? "stageVariables"
     <*> v .: "isBase64Encoded"
     <*> v .: "requestContext"
     <*> v `bodyParser` "body"
@@ -157,18 +159,18 @@ data ApiGatewayRequestContextIdentity = ApiGatewayRequestContextIdentity
 instance FromJSON ApiGatewayRequestContextIdentity where
   parseJSON (Object v) =
     ApiGatewayRequestContextIdentity
-      <$> v .: "cognitoIdentityPoolId"
-      <*> v .: "accountId"
-      <*> v .: "cognitoIdentityId"
-      <*> v .: "caller"
-      <*> v .: "sourceIp"
-      <*> v .: "principalOrgId"
-      <*> v .: "accessKey"
-      <*> v .: "cognitoAuthenticationType"
-      <*> v .: "cognitoAuthenticationProvider"
-      <*> v .: "userArn"
-      <*> v .: "userAgent"
-      <*> v .: "user"
+      <$> v .:? "cognitoIdentityPoolId"
+      <*> v .:? "accountId"
+      <*> v .:? "cognitoIdentityId"
+      <*> v .:? "caller"
+      <*> v .:? "sourceIp"
+      <*> v .:? "principalOrgId"
+      <*> v .:? "accessKey"
+      <*> v .:? "cognitoAuthenticationType"
+      <*> v .:? "cognitoAuthenticationProvider"
+      <*> v .:? "userArn"
+      <*> v .:? "userAgent"
+      <*> v .:? "user"
   parseJSON _ = fail "Expected ApiGatewayRequestContextIdentity to be an object."
 
 newtype ApiGatewayResponseBody
