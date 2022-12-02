@@ -48,6 +48,7 @@ newtype ApiGatewayDispatcherOptions = ApiGatewayDispatcherOptions
 data ApiGatewayRequest body = ApiGatewayRequest
   { apiGatewayRequestResource :: !(Maybe Text),
     apiGatewayRequestPath :: !(Maybe Text),
+    apiGatewayRequestRawPath :: !(Maybe Text),
     apiGatewayRequestHttpMethod :: !(Maybe Text),
     apiGatewayRequestHeaders :: !(Maybe (HashMap Text Text)),
     apiGatewayRequestQueryStringParameters :: !(Maybe (HashMap Text Text)),
@@ -87,6 +88,7 @@ parseApiGatewayRequest bodyParser (Object v) =
   ApiGatewayRequest
     <$> v .:? "resource"
     <*> v .:? "path"
+    <*> v .:? "rawPath"
     <*> v .:? "httpMethod"
     <*> v .: "headers"
     <*> v .: "queryStringParameters"
