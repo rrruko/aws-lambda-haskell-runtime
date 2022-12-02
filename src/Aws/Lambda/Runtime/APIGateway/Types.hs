@@ -8,6 +8,7 @@
 module Aws.Lambda.Runtime.APIGateway.Types
   ( ApiGatewayRequest (..),
     ApiGatewayRequestContext (..),
+    ApiGatewayRequestContextHttp (..),
     ApiGatewayRequestContextIdentity (..),
     ApiGatewayResponse (..),
     ApiGatewayResponseBody (..),
@@ -105,6 +106,7 @@ data ApiGatewayRequestContext = ApiGatewayRequestContext
   { apiGatewayRequestContextResourceId :: !(Maybe Text),
     apiGatewayRequestContextResourcePath :: !(Maybe Text),
     apiGatewayRequestContextHttpMethod :: !(Maybe Text),
+    apiGatewayRequestContextHttp :: !(Maybe ApiGatewayRequestContextHttp),
     apiGatewayRequestContextExtendedRequestId :: !(Maybe Text),
     apiGatewayRequestContextRequestTime :: !(Maybe Text),
     apiGatewayRequestContextPath :: !(Maybe Text),
@@ -126,6 +128,7 @@ instance FromJSON ApiGatewayRequestContext where
       <$> v .:? "resourceId"
       <*> v .:? "path"
       <*> v .:? "httpMethod"
+      <*> v .:? "http"
       <*> v .:? "extendedRequestId"
       <*> v .:? "requestTime"
       <*> v .:? "path"
@@ -139,6 +142,24 @@ instance FromJSON ApiGatewayRequestContext where
       <*> v .:? "identity"
       <*> v .:? "authorizer"
   parseJSON _ = fail "Expected ApiGatewayRequestContext to be an object."
+
+data ApiGatewayRequestContextHttp = ApiGatewayRequestContextHttp
+  { apiGatewayRequestContextHttp'Method :: !(Maybe Text)
+  , apiGatewayRequestContextHttpPath :: !(Maybe Text)
+  , apiGatewayRequestContextHttpProtocol :: !(Maybe Text)
+  , apiGatewayRequestContextHttpSourceIp :: !(Maybe Text)
+  , apiGatewayRequestContextHttpUserAgent :: !(Maybe Text)
+  } deriving (Show)
+
+instance FromJSON ApiGatewayRequestContextHttp where
+  parseJSON (Object v) =
+    ApiGatewayRequestContextHttp
+      <$> v .:? "method"
+      <*> v .:? "path"
+      <*> v .:? "protocol"
+      <*> v .:? "sourceIp"
+      <*> v .:? "userAgent"
+  parseJSON _ = fail "Expected ApiGatewayRequestContextHttp to be an object."
 
 data ApiGatewayRequestContextIdentity = ApiGatewayRequestContextIdentity
   { apiGatewayRequestContextIdentityCognitoIdentityPoolId :: !(Maybe Text),
